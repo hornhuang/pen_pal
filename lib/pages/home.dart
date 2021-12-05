@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key? key, required this.title}) : super(key: key);
+class HomePage extends StatefulWidget {
+  HomePage({Key? key, required this.title}) : super(key: key);
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -16,42 +17,46 @@ class MyHomePage extends StatefulWidget {
   final String title;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _HomePageState createState() => _HomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _HomePageState extends State<HomePage> {
+  bool enableEdit = false;
+  TextEditingController controller = TextEditingController();
 
-  void _incrementCounter() {
+  void _onEditBtnTapped() {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      enableEdit = !enableEdit;
     });
+  }
+
+  Widget _buildMarkdown(String content) {
+    return Markdown(data: content);
+  }
+
+  Widget _buildTextField(String content) {
+    controller.text = content;
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        border: InputBorder.none,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
       body: FutureBuilder(
-        future: rootBundle.loadString('assets/markdown.md'),
+        future: rootBundle.loadString('assets/home.md'),
         builder: (BuildContext context,AsyncSnapshot snapshot){
           if(snapshot.hasData){
-            return Markdown(data: snapshot.data);
+            return Container(
+              padding: EdgeInsets.all(16),
+              child: enableEdit ? 
+              _buildTextField(snapshot.data) : 
+              _buildMarkdown(snapshot.data),
+            );
           }else{
             return Center(
               child: Text("加载中..."),
@@ -60,9 +65,9 @@ class _MyHomePageState extends State<MyHomePage> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
+        onPressed: _onEditBtnTapped,
+        tooltip: enableEdit ? "预览" : '编辑',
+        child: enableEdit ? Icon(Icons.image) : Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
